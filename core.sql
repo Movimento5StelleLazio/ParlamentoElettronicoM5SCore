@@ -116,6 +116,7 @@ CREATE TABLE "member" (
         "birthday"              DATE,
         "address"               TEXT,
         "email"                 TEXT,
+        "codice_fiscale"	character varying(16) UNIQUE,
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
@@ -167,6 +168,7 @@ COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the 
 COMMENT ON COLUMN "member"."internal_posts"       IS 'Posts (offices) of the member inside the organization';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
+COMMENT ON COLUMN "member"."codice_fiscale"       IS 'Italian tax identification number (Codice fiscale)';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
