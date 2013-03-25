@@ -169,16 +169,16 @@ COMMENT ON COLUMN "member"."identification"       IS 'Optional identification nu
 COMMENT ON COLUMN "member"."authentication"       IS 'Information about how this member was authenticated';
 COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the organization the member belongs to';
 COMMENT ON COLUMN "member"."internal_posts"       IS 'Posts (offices) of the member inside the organization';
+COMMENT ON COLUMN "member"."m5sid"		  IS 'M5S identification number';
+COMMENT ON COLUMN "member"."rsa_public_key"       IS 'RSA Public Key for member';
+COMMENT ON COLUMN "member"."certification_level"  IS '0 = non certificato, 1 = certificato, 2 = pec, 3 = token';
+COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
 COMMENT ON COLUMN "member"."statement"            IS 'Freely chosen text of the member for his/her profile';
-COMMENT ON COLUMN "member"."m5sid"		  IS 'M5S identification number';
-COMMENT ON COLUMN "member"."rsa_public_key"       IS 'RSA Public Key for member';
-COMMENT ON COLUMN "member"."certification_level"  IS '0 = non certificato, 1 = certificato, 2 = pec, 3 = token';
-COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';
 
 
 -- DEPRECATED API TABLES --
