@@ -139,6 +139,9 @@ CREATE TRIGGER "update_text_search_data"
   tsvector_update_trigger('text_search_data', 'pg_catalog.simple',
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
+CREATE TRIGGER codice_fiscale_validation
+  BEFORE INSERT OR UPDATE ON "member"
+  FOR EACH ROW EXECUTE PROCEDURE check_codice_fiscale();
 
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
@@ -1573,6 +1576,20 @@ CREATE TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set"
 COMMENT ON FUNCTION "voter_comment_fields_only_set_when_voter_comment_is_set_trigger"() IS 'Implementation of trigger "voter_comment_fields_only_set_when_voter_comment_is_set" ON table "direct_voter"';
 COMMENT ON TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set" ON "direct_voter" IS 'If "comment" is set to NULL, then other comment related fields are also set to NULL.';
 
+CREATE OR REPLACE FUNCTION codice_fiscale_insert_trigger()
+  RETURNS TRIGGER 
+  LANGUAGE plpgsql VOLATILE AS $$
+    DECLARE myrec int;
+    BEGIN
+       IF length (NEW.codice_fiscale) = 16 THEN
+		--NEW.campo= 'ok';
+		RETURN NEW;
+	ELSE
+		RAISE EXCEPTION 'Lunghezza non permessa';
+      END IF;
+      RETURN NULL;
+   END;
+  $$;
 
 ---------------------------------------------------------------
 -- Ensure that votes are not modified when issues are closed --
