@@ -9,14 +9,14 @@ COMMENT ON COLUMN member.codice_fiscale IS 'Italian tax identification number (C
 
 -- DROP FUNCTION codice_fiscale_insert_trigger();
 
-CREATE OR REPLACE FUNCTION codice_fiscale_insert_trigger()
+CREATE FUNCTION codice_fiscale_insert_trigger()
   RETURNS trigger AS
 $BODY$
     DECLARE myrec int;
     BEGIN
        myrec = length (NEW.codice_fiscale);
        
-       IF myrec = 16 THEN
+       IF myrec = 16 OR  NEW.codice_fiscale ISNULL THEN
 		--NEW.campo= 'ok';
 		RETURN NEW;
 	ELSE
