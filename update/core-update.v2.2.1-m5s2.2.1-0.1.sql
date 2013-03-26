@@ -9,26 +9,19 @@ COMMENT ON COLUMN member.codice_fiscale IS 'Italian tax identification number (C
 
 -- DROP FUNCTION codice_fiscale_insert_trigger();
 
-CREATE OR REPLACE FUNCTION codice_fiscale_insert_trigger()
-  RETURNS trigger AS
-$BODY$
+CREATE FUNCTION codice_fiscale_insert_trigger()
+  RETURNS TRIGGER
+  LANGUAGE plpgsql VOLATILE AS $$
     DECLARE myrec int;
     BEGIN
-       myrec = length (NEW.codice_fiscale);
-       
-       IF myrec = 16 THEN
-		--NEW.campo= 'ok';
-		RETURN NEW;
-	ELSE
-		RAISE EXCEPTION 'Lunghezza non permessa';
+       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
+                RETURN NEW;
+        ELSE
+                RAISE EXCEPTION 'Lunghezza non permessa';
       END IF;
       RETURN NULL;
-         
    END;
-
-$BODY$
-  LANGUAGE plpgsql VOLATILE
-  COST 100;
+  $$;
 
 -- Trigger: codice_fiscale_validation on member
 
