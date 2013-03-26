@@ -38,7 +38,7 @@ CREATE TRIGGER codice_fiscale_validation
   BEFORE INSERT OR UPDATE
   ON member
   FOR EACH ROW
-  EXECUTE PROCEDURE check_codice_fiscale();
+  EXECUTE PROCEDURE codice_fiscale_insert_trigger();
 
 
 COMMIT;
