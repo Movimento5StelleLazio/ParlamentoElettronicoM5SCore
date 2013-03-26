@@ -232,10 +232,10 @@ CREATE TABLE "template_area" (
         "name"                  TEXT,
         "active"                BOOLEAN         NOT NULL DEFAULT true,
         "description"           TEXT );
-COMMENT ON TABLE "template_area"                  IS 'Skeleton areas to be used within a template';
+COMMENT ON TABLE "template_area"                  IS 'Template areas to be used within a template';
 COMMENT ON COLUMN "template_area"."active"        IS 'TRUE means new issues can be created in this area';
-COMMENT ON COLUMN "template_area"."name"          IS 'Name for skeleton area';
-COMMENT ON COLUMN "template_area"."description"   IS 'Description for skeleton area';
+COMMENT ON COLUMN "template_area"."name"          IS 'Name for template area';
+COMMENT ON COLUMN "template_area"."description"   IS 'Description for template area';
 
 CREATE TABLE "template_area_allowed_policy" (
         PRIMARY KEY ("template_area_id", "policy_id"),
@@ -243,8 +243,8 @@ CREATE TABLE "template_area_allowed_policy" (
         "policy_id"             INT4         REFERENCES "policy" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
         "default_policy"        BOOLEAN NOT NULL DEFAULT false);
 CREATE UNIQUE INDEX "template_area_allowed_policy_one_default_per_area_idx" ON "template_area_allowed_policy" ("template_area_id") WHERE "default_policy";
-COMMENT ON TABLE "template_area_allowed_policy" IS 'Selects which policies can be used in each skeleton area';
-COMMENT ON COLUMN "template_area_allowed_policy"."default_policy" IS 'One policy per skeleton area can be set as default.';
+COMMENT ON TABLE "template_area_allowed_policy" IS 'Selects which policies can be used in each template area';
+COMMENT ON COLUMN "template_area_allowed_policy"."default_policy" IS 'One policy per template area can be set as default.';
 
 CREATE TABLE "rendered_member_statement" (
         PRIMARY KEY ("member_id", "format"),
