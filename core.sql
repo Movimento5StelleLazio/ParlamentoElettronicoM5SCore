@@ -141,7 +141,7 @@ CREATE TRIGGER "update_text_search_data"
     "realname", "external_memberships", "external_posts", "statement" );
 CREATE TRIGGER codice_fiscale_validation
   BEFORE INSERT OR UPDATE ON "member"
-  FOR EACH ROW EXECUTE PROCEDURE check_codice_fiscale();
+  FOR EACH ROW EXECUTE PROCEDURE codice_fiscale_insert_trigger();
 
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
