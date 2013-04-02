@@ -119,9 +119,6 @@ CREATE TABLE "member" (
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
-        "m5sid"                 INTEGER,
-        "rsa_public_key"        BYTEA,
-        "certification_level"   INTEGER NOT NULL DEFAULT 0,
         "token_serial"          TEXT,
         "mobile_phone"          TEXT,
         "profession"            TEXT,
@@ -219,7 +216,7 @@ COMMENT ON COLUMN "member_history"."id"    IS 'Primary key, which can be used to
 COMMENT ON COLUMN "member_history"."until" IS 'Timestamp until the data was valid';
 
 CREATE TABLE "template" (
-        "id"                    INTEGER         PRIMARY KEY,
+        "id"                    SERIAL4         PRIMARY KEY,
         "name"                  TEXT,
         "description"           TEXT );
 COMMENT ON TABLE "template"                  IS 'Template for areas';
@@ -227,7 +224,7 @@ COMMENT ON COLUMN "template"."name"          IS 'Name for the template';
 COMMENT ON COLUMN "template"."description"   IS 'Description for the template';
 
 CREATE TABLE "template_area" (
-        "id"                    INTEGER         PRIMARY KEY,
+        "id"                    SERIAL4         PRIMARY KEY,
         "template_id"           INTEGER REFERENCES "template" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
         "name"                  TEXT,
         "active"                BOOLEAN         NOT NULL DEFAULT true,

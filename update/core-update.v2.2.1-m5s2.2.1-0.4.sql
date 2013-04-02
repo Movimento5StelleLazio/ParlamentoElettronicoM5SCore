@@ -1,5 +1,5 @@
 CREATE TABLE "template" (
-        "id"                    INTEGER         PRIMARY KEY,
+        "id"                    SERIAL4         PRIMARY KEY,
         "name"                  TEXT,
         "description"           TEXT );
 COMMENT ON TABLE "template"                  IS 'Template for areas';
@@ -7,7 +7,7 @@ COMMENT ON COLUMN "template"."name"          IS 'Name for the template';
 COMMENT ON COLUMN "template"."description"   IS 'Description for the template';
 
 CREATE TABLE "template_area" (
-        "id"                    INTEGER         PRIMARY KEY,
+        "id"                    SERIAL4         PRIMARY KEY,
         "template_id"           INTEGER REFERENCES "template" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
         "name"                  TEXT,
         "active"                BOOLEAN         NOT NULL DEFAULT true,
