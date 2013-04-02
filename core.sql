@@ -116,11 +116,13 @@ CREATE TABLE "member" (
         "birthday"              DATE,
         "address"               TEXT,
         "email"                 TEXT,
+        "codice_fiscale"	character varying(16) UNIQUE,
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
         "mobile_phone"          TEXT,
         "profession"            TEXT,
+	"elected"		BOOLEAN,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -138,6 +140,9 @@ CREATE TRIGGER "update_text_search_data"
   tsvector_update_trigger('text_search_data', 'pg_catalog.simple',
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
+CREATE TRIGGER codice_fiscale_validation
+  BEFORE INSERT OR UPDATE ON "member"
+  FOR EACH ROW EXECUTE PROCEDURE codice_fiscale_insert_trigger();
 
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
@@ -166,7 +171,9 @@ COMMENT ON COLUMN "member"."authentication"       IS 'Information about how this
 COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the organization the member belongs to';
 COMMENT ON COLUMN "member"."internal_posts"       IS 'Posts (offices) of the member inside the organization';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
+COMMENT ON COLUMN "member"."elected"              IS 'Member was selected by vote for an office';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
+COMMENT ON COLUMN "member"."codice_fiscale"       IS 'Italian tax identification number (Codice fiscale)';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
@@ -1199,8 +1206,6 @@ CREATE UNIQUE INDEX "notification_sent_singleton_idx" ON "notification_sent" ((1
 COMMENT ON TABLE "notification_sent" IS 'This table stores one row with the last event_id, for which notifications have been sent out';
 COMMENT ON INDEX "notification_sent_singleton_idx" IS 'This index ensures that "notification_sent" only contains one row maximum.';
 
-
-
 ----------------------------------------------
 -- Writing of history entries and event log --
 ----------------------------------------------
@@ -1598,6 +1603,19 @@ CREATE TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set"
 COMMENT ON FUNCTION "voter_comment_fields_only_set_when_voter_comment_is_set_trigger"() IS 'Implementation of trigger "voter_comment_fields_only_set_when_voter_comment_is_set" ON table "direct_voter"';
 COMMENT ON TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set" ON "direct_voter" IS 'If "comment" is set to NULL, then other comment related fields are also set to NULL.';
 
+CREATE FUNCTION codice_fiscale_insert_trigger()
+  RETURNS TRIGGER 
+  LANGUAGE plpgsql VOLATILE AS $$
+    DECLARE myrec int;
+    BEGIN
+       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
+		RETURN NEW;
+	ELSE
+		RAISE EXCEPTION 'Lunghezza non permessa';
+      END IF;
+      RETURN NULL;
+   END;
+  $$;
 
 ---------------------------------------------------------------
 -- Ensure that votes are not modified when issues are closed --
@@ -4509,7 +4527,5 @@ CREATE FUNCTION "delete_private_data"()
   $$;
 
 COMMENT ON FUNCTION "delete_private_data"() IS 'Used by lf_export script. DO NOT USE on productive database, but only on a copy! This function deletes all data which should not be publicly available, and can be used to create a database dump for publication. See source code to see which data is deleted. If you need a different behaviour, copy this function and modify lf_export accordingly, to avoid data-leaks after updating.';
-
-
 
 COMMIT;
