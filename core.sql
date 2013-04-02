@@ -119,7 +119,6 @@ CREATE TABLE "member" (
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
-        "token_serial"          TEXT,
         "mobile_phone"          TEXT,
         "profession"            TEXT,
         "external_memberships"  TEXT,
