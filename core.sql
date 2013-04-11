@@ -55,13 +55,15 @@ COMMENT ON FUNCTION "highlight"
 
 
 CREATE TABLE "system_setting" (
-        "member_ttl"            INTERVAL );
+        "member_ttl"            INTERVAL,
+        "gui_preset"            TEXT );
 CREATE UNIQUE INDEX "system_setting_singleton_idx" ON "system_setting" ((1));
 
 COMMENT ON TABLE "system_setting" IS 'This table contains only one row with different settings in each column.';
 COMMENT ON INDEX "system_setting_singleton_idx" IS 'This index ensures that "system_setting" only contains one row maximum.';
 
 COMMENT ON COLUMN "system_setting"."member_ttl" IS 'Time after members get their "active" flag set to FALSE, if they do not show any activity.';
+COMMENT ON COLUMN "system_setting"."gui_preset" IS 'Choose from configured gui from the array config.gui_preset';
 
 
 CREATE TABLE "contingent" (
