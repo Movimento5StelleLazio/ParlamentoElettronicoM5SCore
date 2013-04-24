@@ -17,7 +17,6 @@ COMMENT ON COLUMN member.rsa_public_key IS 'RSA Public Key for member';
 -- ALTER TABLE member DROP COLUMN certification_level;
 
 ALTER TABLE member ADD COLUMN certification_level integer;
-ALTER TABLE member ALTER COLUMN certification_level SET NOT NULL DEFAULT 0;
 ALTER TABLE member ALTER COLUMN certification_level SET DEFAULT 0;
 COMMENT ON COLUMN member.certification_level IS '0 = non certificato, 1 = certificato, 2 = pec, 3 = token';
 
