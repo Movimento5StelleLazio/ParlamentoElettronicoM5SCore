@@ -1,0 +1,20 @@
+ALTER TABLE issue ADD COLUMN title text;
+COMMENT ON COLUMN issue.title IS 'Issue full title';
+ALTER TABLE issue ADD COLUMN brief_description text;
+COMMENT ON COLUMN issue.brief_description IS 'Brief description of the issue';
+ALTER TABLE issue ADD COLUMN keywords tsvector;
+COMMENT ON COLUMN issue.keywords IS 'Keyword provided by the author';
+ALTER TABLE issue ADD COLUMN problem_description text;
+COMMENT ON COLUMN issue.problem_description IS 'Description of the problem to be solved';
+ALTER TABLE issue ADD COLUMN aim_description text;
+COMMENT ON COLUMN issue.aim_description IS 'Description of the issue aim';
+ALTER TABLE initiative ADD COLUMN title text;
+COMMENT ON COLUMN initiative.title IS 'Initiative full title';
+ALTER TABLE initiative ADD COLUMN brief_description text;
+COMMENT ON COLUMN initiative.brief_description IS 'Brief description of the initiative';
+ALTER TABLE initiative ADD COLUMN competence_fields text;
+COMMENT ON COLUMN initiative.competence_fields IS 'Technical competence fields';
+CREATE TYPE "author_type" AS ENUM ('elected', 'other');
+ALTER TABLE initiative ADD COLUMN author_type author_type;
+COMMENT ON COLUMN initiative.author_type IS 'Type of author';
+

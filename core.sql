@@ -574,6 +574,11 @@ CREATE TABLE "issue" (
         "population"            INT4,
         "voter_count"           INT4,
         "status_quo_schulze_rank" INT4,
+        "title"			TEXT,
+        "brief_description"     TEXT,
+        "keywords"              TSVECTOR, 
+        "problem_description"   TEXT,
+        "aim_description"       TEXT,
         CONSTRAINT "admission_time_not_null_unless_instantly_accepted" CHECK (
           "admission_time" NOTNULL OR ("accepted" NOTNULL AND "accepted" = "created") ),
         CONSTRAINT "valid_state" CHECK (
@@ -637,6 +642,11 @@ COMMENT ON COLUMN "issue"."latest_snapshot_event"   IS 'Event type of latest sna
 COMMENT ON COLUMN "issue"."population"              IS 'Sum of "weight" column in table "direct_population_snapshot"';
 COMMENT ON COLUMN "issue"."voter_count"             IS 'Total number of direct and delegating voters; This value is related to the final voting, while "population" is related to snapshots before the final voting';
 COMMENT ON COLUMN "issue"."status_quo_schulze_rank" IS 'Schulze rank of status quo, as calculated by "calculate_ranks" function';
+COMMENT ON COLUMN "issue"."title"                   IS 'Issue full title';
+COMMENT ON COLUMN "issue"."brief_description"       IS 'Brief description of the issue';
+COMMENT ON COLUMN "issue"."keywords"                IS 'Keyword provided by the author';
+COMMENT ON COLUMN "issue"."problem_description"     IS 'Description of the problem to be solved';
+COMMENT ON COLUMN "issue"."aim_description"         IS 'Description of the issue aim';
 
 
 CREATE TABLE "issue_setting" (
@@ -648,6 +658,7 @@ CREATE TABLE "issue_setting" (
 
 COMMENT ON TABLE "issue_setting" IS 'Place for frontend to store issue specific settings of members as strings';
 
+CREATE TYPE "author_type" AS ENUM ('elected', 'other');
 
 CREATE TABLE "initiative" (
         UNIQUE ("issue_id", "id"),  -- index needed for foreign-key on table "vote"
@@ -680,6 +691,10 @@ CREATE TABLE "initiative" (
         "winner"                BOOLEAN,
         "rank"                  INT4,
         "text_search_data"      TSVECTOR,
+        "title"                 TEXT,
+        "brief_description"     TEXT,
+        "competence_fields"     TEXT,
+        "author_type"           author_type,
         CONSTRAINT "all_or_none_of_revoked_and_revoked_by_member_id_must_be_null"
           CHECK ("revoked" NOTNULL = "revoked_by_member_id" NOTNULL),
         CONSTRAINT "non_revoked_initiatives_cant_suggest_other"
@@ -736,6 +751,10 @@ COMMENT ON COLUMN "initiative"."multistage_majority"    IS 'TRUE, if either (a) 
 COMMENT ON COLUMN "initiative"."eligible"               IS 'Initiative has a "direct_majority" and an "indirect_majority", is "better_than_status_quo" and depending on selected policy the initiative has no "reverse_beat_path" or "multistage_majority"';
 COMMENT ON COLUMN "initiative"."winner"                 IS 'Winner is the "eligible" initiative with best "schulze_rank" and in case of ties with lowest "id"';
 COMMENT ON COLUMN "initiative"."rank"                   IS 'Unique ranking for all "admitted" initiatives per issue; lower rank is better; a winner always has rank 1, but rank 1 does not imply that an initiative is winner; initiatives with "direct_majority" AND "indirect_majority" always have a better (lower) rank than other initiatives';
+COMMENT ON COLUMN "initiative"."title"                  IS 'Initiative full title';
+COMMENT ON COLUMN "initiative"."brief_description"      IS 'Brief description of the initiative';
+COMMENT ON COLUMN "initiative"."competence_fields"      IS 'Technical competence fields';
+COMMENT ON COLUMN "initiative"."author_type"            IS 'Type of author';
 
 
 CREATE TABLE "battle" (
