@@ -146,6 +146,20 @@ CREATE TRIGGER "update_text_search_data"
   tsvector_update_trigger('text_search_data', 'pg_catalog.simple',
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
+
+CREATE FUNCTION codice_fiscale_insert_trigger()
+  RETURNS TRIGGER 
+  LANGUAGE plpgsql VOLATILE AS $$
+    DECLARE myrec int;
+    BEGIN
+       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
+		RETURN NEW;
+	ELSE
+		RAISE EXCEPTION 'Lunghezza non permessa';
+      END IF;
+      RETURN NULL;
+   END;
+  $$;
 CREATE TRIGGER codice_fiscale_validation
   BEFORE INSERT OR UPDATE ON "member"
   FOR EACH ROW EXECUTE PROCEDURE codice_fiscale_insert_trigger();
@@ -226,151 +240,6 @@ COMMENT ON TABLE "member_history" IS 'Filled by trigger; keeps information about
 
 COMMENT ON COLUMN "member_history"."id"    IS 'Primary key, which can be used to sort entries correctly (and time warp resistant)';
 COMMENT ON COLUMN "member_history"."until" IS 'Timestamp until the data was valid';
-
-CREATE TABLE "template" (
-        "id"                    SERIAL4         PRIMARY KEY,
-        "name"                  TEXT,
-        "description"           TEXT );
-COMMENT ON TABLE "template"                  IS 'Template for areas';
-COMMENT ON COLUMN "template"."name"          IS 'Name for the template';
-COMMENT ON COLUMN "template"."description"   IS 'Description for the template';
-
-CREATE TABLE "template_area" (
-        "id"                    SERIAL4         PRIMARY KEY,
-        "template_id"           INTEGER REFERENCES "template" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "name"                  TEXT,
-        "active"                BOOLEAN         NOT NULL DEFAULT true,
-        "description"           TEXT );
-COMMENT ON TABLE "template_area"                  IS 'Template areas to be used within a template';
-COMMENT ON COLUMN "template_area"."active"        IS 'TRUE means new issues can be created in this area';
-COMMENT ON COLUMN "template_area"."name"          IS 'Name for template area';
-COMMENT ON COLUMN "template_area"."description"   IS 'Description for template area';
-
-CREATE TABLE "template_area_allowed_policy" (
-        PRIMARY KEY ("template_area_id", "policy_id"),
-        "template_area_id"      INT4         REFERENCES "template_area" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "policy_id"             INT4         REFERENCES "policy" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "default_policy"        BOOLEAN NOT NULL DEFAULT false);
-CREATE UNIQUE INDEX "template_area_allowed_policy_one_default_per_area_idx" ON "template_area_allowed_policy" ("template_area_id") WHERE "default_policy";
-COMMENT ON TABLE "template_area_allowed_policy" IS 'Selects which policies can be used in each template area';
-COMMENT ON COLUMN "template_area_allowed_policy"."default_policy" IS 'One policy per template area can be set as default.';
-
-CREATE TABLE "rendered_member_statement" (
-        PRIMARY KEY ("member_id", "format"),
-        "member_id"             INT8            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "format"                TEXT,
-        "content"               TEXT            NOT NULL );
-
-COMMENT ON TABLE "rendered_member_statement" IS 'This table may be used by frontends to cache "rendered" member statements (e.g. HTML output generated from wiki text)';
-
-
-CREATE TABLE "setting" (
-        PRIMARY KEY ("member_id", "key"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "key"                   TEXT            NOT NULL,
-        "value"                 TEXT            NOT NULL );
-CREATE INDEX "setting_key_idx" ON "setting" ("key");
-
-COMMENT ON TABLE "setting" IS 'Place to store a frontend specific setting for members as a string';
-
-COMMENT ON COLUMN "setting"."key" IS 'Name of the setting, preceded by a frontend specific prefix';
-
-
-CREATE TABLE "setting_map" (
-        PRIMARY KEY ("member_id", "key", "subkey"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "key"                   TEXT            NOT NULL,
-        "subkey"                TEXT            NOT NULL,
-        "value"                 TEXT            NOT NULL );
-CREATE INDEX "setting_map_key_idx" ON "setting_map" ("key");
-
-COMMENT ON TABLE "setting_map" IS 'Place to store a frontend specific setting for members as a map of key value pairs';
-
-COMMENT ON COLUMN "setting_map"."key"    IS 'Name of the setting, preceded by a frontend specific prefix';
-COMMENT ON COLUMN "setting_map"."subkey" IS 'Key of a map entry';
-COMMENT ON COLUMN "setting_map"."value"  IS 'Value of a map entry';
-
-
-CREATE TABLE "member_relation_setting" (
-        PRIMARY KEY ("member_id", "key", "other_member_id"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "key"                   TEXT            NOT NULL,
-        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "value"                 TEXT            NOT NULL );
-
-COMMENT ON TABLE "member_relation_setting" IS 'Place to store a frontend specific setting related to relations between members as a string';
-
-
-CREATE TYPE "member_image_type" AS ENUM ('photo', 'avatar');
-
-COMMENT ON TYPE "member_image_type" IS 'Types of images for a member';
-
-
-CREATE TABLE "member_image" (
-        PRIMARY KEY ("member_id", "image_type", "scaled"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "image_type"            "member_image_type",
-        "scaled"                BOOLEAN,
-        "content_type"          TEXT,
-        "data"                  BYTEA           NOT NULL );
-
-COMMENT ON TABLE "member_image" IS 'Images of members';
-
-COMMENT ON COLUMN "member_image"."scaled" IS 'FALSE for original image, TRUE for scaled version of the image';
-
-
-CREATE TABLE "member_count" (
-        "calculated"            TIMESTAMPTZ     NOT NULL DEFAULT now(),
-        "total_count"           INT4            NOT NULL );
-
-COMMENT ON TABLE "member_count" IS 'Contains one row which contains the total count of active(!) members and a timestamp indicating when the total member count and area member counts were calculated';
-
-COMMENT ON COLUMN "member_count"."calculated"  IS 'timestamp indicating when the total member count and area member counts were calculated';
-COMMENT ON COLUMN "member_count"."total_count" IS 'Total count of active(!) members';
-
-
-CREATE TABLE "contact" (
-        PRIMARY KEY ("member_id", "other_member_id"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "public"                BOOLEAN         NOT NULL DEFAULT FALSE,
-        CONSTRAINT "cant_save_yourself_as_contact"
-          CHECK ("member_id" != "other_member_id") );
-CREATE INDEX "contact_other_member_id_idx" ON "contact" ("other_member_id");
-
-COMMENT ON TABLE "contact" IS 'Contact lists';
-
-COMMENT ON COLUMN "contact"."member_id"       IS 'Member having the contact list';
-COMMENT ON COLUMN "contact"."other_member_id" IS 'Member referenced in the contact list';
-COMMENT ON COLUMN "contact"."public"          IS 'TRUE = display contact publically';
-
-
-CREATE TABLE "ignored_member" (
-        PRIMARY KEY ("member_id", "other_member_id"),
-        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE );
-CREATE INDEX "ignored_member_other_member_id_idx" ON "ignored_member" ("other_member_id");
-
-COMMENT ON TABLE "ignored_member" IS 'Possibility to filter other members';
-
-COMMENT ON COLUMN "ignored_member"."member_id"       IS 'Member ignoring someone';
-COMMENT ON COLUMN "ignored_member"."other_member_id" IS 'Member being ignored';
-
-
-CREATE TABLE "session" (
-        "ident"                 TEXT            PRIMARY KEY,
-        "additional_secret"     TEXT,
-        "expiry"                TIMESTAMPTZ     NOT NULL DEFAULT now() + '24 hours',
-        "member_id"             INT8            REFERENCES "member" ("id") ON DELETE SET NULL,
-        "lang"                  TEXT );
-CREATE INDEX "session_expiry_idx" ON "session" ("expiry");
-
-COMMENT ON TABLE "session" IS 'Sessions, i.e. for a web-frontend or API layer';
-
-COMMENT ON COLUMN "session"."ident"             IS 'Secret session identifier (i.e. random string)';
-COMMENT ON COLUMN "session"."additional_secret" IS 'Additional field to store a secret, which can be used against CSRF attacks';
-COMMENT ON COLUMN "session"."member_id"         IS 'Reference to member, who is logged in';
-COMMENT ON COLUMN "session"."lang"              IS 'Language code of the selected language';
 
 
 CREATE TABLE "policy" (
@@ -1248,6 +1117,156 @@ CREATE UNIQUE INDEX "notification_sent_singleton_idx" ON "notification_sent" ((1
 COMMENT ON TABLE "notification_sent" IS 'This table stores one row with the last event_id, for which notifications have been sent out';
 COMMENT ON INDEX "notification_sent_singleton_idx" IS 'This index ensures that "notification_sent" only contains one row maximum.';
 
+
+
+
+CREATE TABLE "template" (
+        "id"                    SERIAL4         PRIMARY KEY,
+        "name"                  TEXT,
+        "description"           TEXT );
+COMMENT ON TABLE "template"                  IS 'Template for areas';
+COMMENT ON COLUMN "template"."name"          IS 'Name for the template';
+COMMENT ON COLUMN "template"."description"   IS 'Description for the template';
+
+CREATE TABLE "template_area" (
+        "id"                    SERIAL4         PRIMARY KEY,
+        "template_id"           INTEGER REFERENCES "template" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "name"                  TEXT,
+        "active"                BOOLEAN         NOT NULL DEFAULT true,
+        "description"           TEXT );
+COMMENT ON TABLE "template_area"                  IS 'Template areas to be used within a template';
+COMMENT ON COLUMN "template_area"."active"        IS 'TRUE means new issues can be created in this area';
+COMMENT ON COLUMN "template_area"."name"          IS 'Name for template area';
+COMMENT ON COLUMN "template_area"."description"   IS 'Description for template area';
+
+CREATE TABLE "template_area_allowed_policy" (
+        PRIMARY KEY ("template_area_id", "policy_id"),
+        "template_area_id"      INT4         REFERENCES "template_area" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "policy_id"             INT4         REFERENCES "policy" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "default_policy"        BOOLEAN NOT NULL DEFAULT false);
+CREATE UNIQUE INDEX "template_area_allowed_policy_one_default_per_area_idx" ON "template_area_allowed_policy" ("template_area_id") WHERE "default_policy";
+COMMENT ON TABLE "template_area_allowed_policy" IS 'Selects which policies can be used in each template area';
+COMMENT ON COLUMN "template_area_allowed_policy"."default_policy" IS 'One policy per template area can be set as default.';
+
+CREATE TABLE "rendered_member_statement" (
+        PRIMARY KEY ("member_id", "format"),
+        "member_id"             INT8            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "format"                TEXT,
+        "content"               TEXT            NOT NULL );
+
+COMMENT ON TABLE "rendered_member_statement" IS 'This table may be used by frontends to cache "rendered" member statements (e.g. HTML output generated from wiki text)';
+
+
+CREATE TABLE "setting" (
+        PRIMARY KEY ("member_id", "key"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "key"                   TEXT            NOT NULL,
+        "value"                 TEXT            NOT NULL );
+CREATE INDEX "setting_key_idx" ON "setting" ("key");
+
+COMMENT ON TABLE "setting" IS 'Place to store a frontend specific setting for members as a string';
+
+COMMENT ON COLUMN "setting"."key" IS 'Name of the setting, preceded by a frontend specific prefix';
+
+
+CREATE TABLE "setting_map" (
+        PRIMARY KEY ("member_id", "key", "subkey"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "key"                   TEXT            NOT NULL,
+        "subkey"                TEXT            NOT NULL,
+        "value"                 TEXT            NOT NULL );
+CREATE INDEX "setting_map_key_idx" ON "setting_map" ("key");
+
+COMMENT ON TABLE "setting_map" IS 'Place to store a frontend specific setting for members as a map of key value pairs';
+
+COMMENT ON COLUMN "setting_map"."key"    IS 'Name of the setting, preceded by a frontend specific prefix';
+COMMENT ON COLUMN "setting_map"."subkey" IS 'Key of a map entry';
+COMMENT ON COLUMN "setting_map"."value"  IS 'Value of a map entry';
+
+
+CREATE TABLE "member_relation_setting" (
+        PRIMARY KEY ("member_id", "key", "other_member_id"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "key"                   TEXT            NOT NULL,
+        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "value"                 TEXT            NOT NULL );
+
+COMMENT ON TABLE "member_relation_setting" IS 'Place to store a frontend specific setting related to relations between members as a string';
+
+
+CREATE TYPE "member_image_type" AS ENUM ('photo', 'avatar');
+
+COMMENT ON TYPE "member_image_type" IS 'Types of images for a member';
+
+
+CREATE TABLE "member_image" (
+        PRIMARY KEY ("member_id", "image_type", "scaled"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "image_type"            "member_image_type",
+        "scaled"                BOOLEAN,
+        "content_type"          TEXT,
+        "data"                  BYTEA           NOT NULL );
+
+COMMENT ON TABLE "member_image" IS 'Images of members';
+
+COMMENT ON COLUMN "member_image"."scaled" IS 'FALSE for original image, TRUE for scaled version of the image';
+
+
+CREATE TABLE "member_count" (
+        "calculated"            TIMESTAMPTZ     NOT NULL DEFAULT now(),
+        "total_count"           INT4            NOT NULL );
+
+COMMENT ON TABLE "member_count" IS 'Contains one row which contains the total count of active(!) members and a timestamp indicating when the total member count and area member counts were calculated';
+
+COMMENT ON COLUMN "member_count"."calculated"  IS 'timestamp indicating when the total member count and area member counts were calculated';
+COMMENT ON COLUMN "member_count"."total_count" IS 'Total count of active(!) members';
+
+
+CREATE TABLE "contact" (
+        PRIMARY KEY ("member_id", "other_member_id"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "public"                BOOLEAN         NOT NULL DEFAULT FALSE,
+        CONSTRAINT "cant_save_yourself_as_contact"
+          CHECK ("member_id" != "other_member_id") );
+CREATE INDEX "contact_other_member_id_idx" ON "contact" ("other_member_id");
+
+COMMENT ON TABLE "contact" IS 'Contact lists';
+
+COMMENT ON COLUMN "contact"."member_id"       IS 'Member having the contact list';
+COMMENT ON COLUMN "contact"."other_member_id" IS 'Member referenced in the contact list';
+COMMENT ON COLUMN "contact"."public"          IS 'TRUE = display contact publically';
+
+
+CREATE TABLE "ignored_member" (
+        PRIMARY KEY ("member_id", "other_member_id"),
+        "member_id"             INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "other_member_id"       INT4            REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE );
+CREATE INDEX "ignored_member_other_member_id_idx" ON "ignored_member" ("other_member_id");
+
+COMMENT ON TABLE "ignored_member" IS 'Possibility to filter other members';
+
+COMMENT ON COLUMN "ignored_member"."member_id"       IS 'Member ignoring someone';
+COMMENT ON COLUMN "ignored_member"."other_member_id" IS 'Member being ignored';
+
+
+CREATE TABLE "session" (
+        "ident"                 TEXT            PRIMARY KEY,
+        "additional_secret"     TEXT,
+        "expiry"                TIMESTAMPTZ     NOT NULL DEFAULT now() + '24 hours',
+        "member_id"             INT8            REFERENCES "member" ("id") ON DELETE SET NULL,
+        "lang"                  TEXT );
+CREATE INDEX "session_expiry_idx" ON "session" ("expiry");
+
+COMMENT ON TABLE "session" IS 'Sessions, i.e. for a web-frontend or API layer';
+
+COMMENT ON COLUMN "session"."ident"             IS 'Secret session identifier (i.e. random string)';
+COMMENT ON COLUMN "session"."additional_secret" IS 'Additional field to store a secret, which can be used against CSRF attacks';
+COMMENT ON COLUMN "session"."member_id"         IS 'Reference to member, who is logged in';
+COMMENT ON COLUMN "session"."lang"              IS 'Language code of the selected language';
+
+
+
 ----------------------------------------------
 -- Writing of history entries and event log --
 ----------------------------------------------
@@ -1645,19 +1664,7 @@ CREATE TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set"
 COMMENT ON FUNCTION "voter_comment_fields_only_set_when_voter_comment_is_set_trigger"() IS 'Implementation of trigger "voter_comment_fields_only_set_when_voter_comment_is_set" ON table "direct_voter"';
 COMMENT ON TRIGGER "voter_comment_fields_only_set_when_voter_comment_is_set" ON "direct_voter" IS 'If "comment" is set to NULL, then other comment related fields are also set to NULL.';
 
-CREATE FUNCTION codice_fiscale_insert_trigger()
-  RETURNS TRIGGER 
-  LANGUAGE plpgsql VOLATILE AS $$
-    DECLARE myrec int;
-    BEGIN
-       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
-		RETURN NEW;
-	ELSE
-		RAISE EXCEPTION 'Lunghezza non permessa';
-      END IF;
-      RETURN NULL;
-   END;
-  $$;
+
 
 ---------------------------------------------------------------
 -- Ensure that votes are not modified when issues are closed --
