@@ -1,4 +1,4 @@
-EATE TABLE checked_event (
+CREATE TABLE checked_event (
         "event_id"               INT4 NOT NULL,
         "member_id"              INT4 NOT NULL,
         CONSTRAINT "checked_event_pkey" PRIMARY KEY ("event_id", "member_id"),
