@@ -147,19 +147,6 @@ CREATE TRIGGER "update_text_search_data"
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
 
-CREATE TYPE "auditor_action" AS ENUM
-  ('created', 'certified', 'modified', 'enabled', 'disabled');
-
-CREATE TABLE "auditor_log" (
-        "id"                    SERIAL8         PRIMARY KEY,
-        "auditor_id"            INT4            NOT NULL REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "member_id"             INT4            NOT NULL REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-        "action"                auditor_action  NOT NULL,
-        "ip_address"            TEXT NOT NULL,
-        "occurrence"            TIMESTAMPTZ NOT NULL);
-
-COMMENT ON TABLE "auditor_log" IS 'Log of auditors actions on members (i.e. member creation, member certification, etc..)';
-
 CREATE FUNCTION nin_insert_trigger()
   RETURNS TRIGGER 
   LANGUAGE plpgsql VOLATILE AS $$
