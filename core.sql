@@ -65,7 +65,6 @@ COMMENT ON INDEX "system_setting_singleton_idx" IS 'This index ensures that "sys
 COMMENT ON COLUMN "system_setting"."member_ttl" IS 'Time after members get their "active" flag set to FALSE, if they do not show any activity.';
 COMMENT ON COLUMN "system_setting"."gui_preset" IS 'Choose from configured gui from the array config.gui_preset';
 
-
 CREATE TABLE "contingent" (
         PRIMARY KEY ("polling", "time_frame"),
         "polling"               BOOLEAN,
@@ -118,7 +117,7 @@ CREATE TABLE "member" (
         "birthday"              DATE,
         "address"               TEXT,
         "email"                 TEXT,
-        "codice_fiscale"	character varying(16) UNIQUE,
+        "nin"                   TEXT UNIQUE,
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
@@ -129,6 +128,7 @@ CREATE TABLE "member" (
         "mobile_phone"          TEXT,
         "profession"            TEXT,
 	"elected"		BOOLEAN,
+	"auditor"		BOOLEAN,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -147,22 +147,35 @@ CREATE TRIGGER "update_text_search_data"
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
 
-CREATE FUNCTION codice_fiscale_insert_trigger()
+CREATE TYPE "auditor_action" AS ENUM
+  ('created', 'certified', 'modified', 'enabled', 'disabled');
+
+CREATE TABLE "auditor_log" (
+        "id"                    SERIAL8         PRIMARY KEY,
+        "auditor_id"            INT4            NOT NULL REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "member_id"             INT4            NOT NULL REFERENCES "member" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "action"                auditor_action  NOT NULL,
+        "ip_address"            TEXT NOT NULL,
+        "occurrence"            TIMESTAMPTZ NOT NULL);
+
+COMMENT ON TABLE "auditor_log" IS 'Log of auditors actions on members (i.e. member creation, member certification, etc..)';
+
+CREATE FUNCTION nin_insert_trigger()
   RETURNS TRIGGER 
   LANGUAGE plpgsql VOLATILE AS $$
     DECLARE myrec int;
     BEGIN
-       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
+       IF length (NEW.nin) = 16 OR NEW.nin ISNULL THEN
 		RETURN NEW;
 	ELSE
-		RAISE EXCEPTION 'Lunghezza non permessa';
+		RAISE EXCEPTION 'Wrong lenght';
       END IF;
       RETURN NULL;
    END;
   $$;
-CREATE TRIGGER codice_fiscale_validation
+CREATE TRIGGER nin_validation
   BEFORE INSERT OR UPDATE ON "member"
-  FOR EACH ROW EXECUTE PROCEDURE codice_fiscale_insert_trigger();
+  FOR EACH ROW EXECUTE PROCEDURE nin_insert_trigger();
 
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
@@ -196,8 +209,9 @@ COMMENT ON COLUMN "member"."certification_level"  IS '0 = non certificato, 1 = c
 COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
 COMMENT ON COLUMN "member"."elected"              IS 'Member was selected by vote for an office';
+COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
-COMMENT ON COLUMN "member"."codice_fiscale"       IS 'Italian tax identification number (Codice fiscale)';
+COMMENT ON COLUMN "member"."nin"                  IS 'National Identification Number';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
