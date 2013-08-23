@@ -24,13 +24,3 @@ CREATE TABLE "idcard_scan" (
         "data"                  BYTEA           NOT NULL );
 
 COMMENT ON TABLE  "idcard_scan" IS 'HQ scans of member picture, id card and/or other idenfication documents';
-
-CREATE TABLE "security_log" (
-        "id"                    SERIAL8         PRIMARY KEY,
-        "occurrence"            TIMESTAMPTZ     NOT NULL,
-        "auditor_id"            INT4            NOT NULL,
-        "member_id"             INT4            NOT NULL,
-        "ip_address"            TEXT            NOT NULL,
-        "message"               TEXT );
-
-COMMENT ON TABLE "security_log" IS 'Security log';
