@@ -1,6 +1,6 @@
 ALTER TABLE member ADD COLUMN nin TEXT UNIQUE;
 UPDATE member SET nin=codice_fiscale::TEXT;
-COMMENT ON COLUMN member.nin IS 'National Identification Number';
+COMMENT ON COLUMN member.nin IS 'National Insurance Number';
 
 DROP TRIGGER codice_fiscale_validation ON member;
 DROP FUNCTION codice_fiscale_insert_trigger();

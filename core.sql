@@ -198,7 +198,7 @@ COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, m
 COMMENT ON COLUMN "member"."elected"              IS 'Member was selected by vote for an office';
 COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
-COMMENT ON COLUMN "member"."nin"                  IS 'National Identification Number';
+COMMENT ON COLUMN "member"."nin"                  IS 'National Insurance Number';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
