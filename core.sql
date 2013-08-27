@@ -112,6 +112,7 @@ CREATE TABLE "member" (
         "password_reset_secret"        TEXT     UNIQUE,
         "password_reset_secret_expiry" TIMESTAMPTZ,
         "name"                  TEXT            UNIQUE,
+        "surname"               TEXT,
         "identification"        TEXT            UNIQUE,
         "authentication"        TEXT,
         "organizational_unit"   TEXT,
@@ -124,7 +125,6 @@ CREATE TABLE "member" (
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
-        "m5sid"                 INTEGER,
         "rsa_public_key"        BYTEA,
         "certification_level"   INTEGER NOT NULL DEFAULT 0,
         "token_serial"          TEXT,
@@ -193,11 +193,11 @@ COMMENT ON COLUMN "member"."notify_email_secret_expiry" IS 'Expiry date/time for
 COMMENT ON COLUMN "member"."notify_email_lock_expiry"   IS 'Date/time until no further email confirmation mails may be sent (abuse protection)';
 COMMENT ON COLUMN "member"."notify_level"         IS 'Selects which event notifications are to be sent to the "notify_email" mail address, may be NULL if member did not make any selection yet';
 COMMENT ON COLUMN "member"."name"                 IS 'Distinct name of the member, may be NULL if account has not been activated yet';
+COMMENT ON COLUMN "member"."surname"              IS 'Real surname of the member, may be NULL if account has not been activated yet';
 COMMENT ON COLUMN "member"."identification"       IS 'Optional identification number or code of the member';
 COMMENT ON COLUMN "member"."authentication"       IS 'Information about how this member was authenticated';
 COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the organization the member belongs to';
 COMMENT ON COLUMN "member"."internal_posts"       IS 'Posts (offices) of the member inside the organization';
-COMMENT ON COLUMN "member"."m5sid"		  IS 'M5S identification number';
 COMMENT ON COLUMN "member"."rsa_public_key"       IS 'RSA Public Key for member';
 COMMENT ON COLUMN "member"."certification_level"  IS '0 = non certificato, 1 = certificato, 2 = pec, 3 = token';
 COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';

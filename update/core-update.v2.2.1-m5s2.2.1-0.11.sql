@@ -1,3 +1,6 @@
+BEGIN;
+ALTER TABLE member ADD COLUMN surname TEXT;
+COMMENT ON COLUMN "member"."surname"              IS 'Real surname of the member, may be NULL if account has not been activated yet';
 ALTER TABLE member ADD COLUMN creator_id INT4;
 COMMENT ON COLUMN "member"."creator_id"           IS 'Auditor member who created this account';
 ALTER TABLE member ADD COLUMN certifier_id INT4;
@@ -8,6 +11,7 @@ ALTER TABLE member ADD COLUMN auditor BOOLEAN;
 COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
 ALTER TABLE member ADD COLUMN lqfb_access BOOLEAN;
 COMMENT ON COLUMN "member"."lqfb_access"          IS 'Member has access to lqfb. If FALSE member can still use admin and auditor functions';
+
 
 ALTER TABLE member ADD COLUMN nin TEXT UNIQUE;
 UPDATE member SET nin=codice_fiscale::TEXT;
@@ -34,4 +38,6 @@ CREATE TRIGGER nin_validation
   FOR EACH ROW EXECUTE PROCEDURE nin_insert_trigger();
 
 ALTER TABLE member DROP COLUMN codice_fiscale CASCADE;
+ALTER TABLE member DROP COLUMN m5sid CASCADE;
 
+COMMIT;
