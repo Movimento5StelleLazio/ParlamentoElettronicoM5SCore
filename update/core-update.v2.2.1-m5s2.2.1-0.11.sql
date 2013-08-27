@@ -1,6 +1,12 @@
+ALTER TABLE member ADD COLUMN creator_id INT4;
+COMMENT ON COLUMN "member"."creator_id"           IS 'Auditor member who created this account';
+ALTER TABLE member ADD COLUMN certifier_id INT4;
+COMMENT ON COLUMN "member"."certifier_id"         IS 'Auditor member who certified this account';
+ALTER TABLE member ADD COLUMN certified TIMESTAMPTZ;
+COMMENT ON COLUMN "member"."certified"              IS 'Timestamp of certification of account';
 ALTER TABLE member ADD COLUMN auditor BOOLEAN;
-ALTER TABLE member ADD COLUMN lqfb_access BOOLEAN;
 COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
+ALTER TABLE member ADD COLUMN lqfb_access BOOLEAN;
 COMMENT ON COLUMN "member"."lqfb_access"          IS 'Member has access to lqfb. If FALSE member can still use admin and auditor functions';
 
 ALTER TABLE member ADD COLUMN nin TEXT UNIQUE;

@@ -88,12 +88,15 @@ COMMENT ON TYPE "notify_level" IS 'Level of notification: ''none'' = no notifica
 CREATE TABLE "member" (
         "id"                    SERIAL4         PRIMARY KEY,
         "created"               TIMESTAMPTZ     NOT NULL DEFAULT now(),
+        "creator_id"            INT4,
         "invite_code"           TEXT            UNIQUE,
         "invite_code_expiry"    TIMESTAMPTZ,
         "admin_comment"         TEXT,
         "activated"             TIMESTAMPTZ,
         "last_activity"         DATE,
         "last_login"            TIMESTAMPTZ,
+        "certified"             TIMESTAMPTZ,
+        "certifier_id"          INT4,
         "login"                 TEXT            UNIQUE,
         "password"              TEXT,
         "locked"                BOOLEAN         NOT NULL DEFAULT FALSE,
@@ -168,12 +171,15 @@ CREATE TRIGGER nin_validation
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
 COMMENT ON COLUMN "member"."created"              IS 'Creation of member record and/or invite code';
+COMMENT ON COLUMN "member"."creator_id"           IS 'Auditor member who created this account';
 COMMENT ON COLUMN "member"."invite_code"          IS 'Optional invite code, to allow a member to initialize his/her account the first time';
 COMMENT ON COLUMN "member"."invite_code_expiry"   IS 'Expiry data/time for "invite_code"';
 COMMENT ON COLUMN "member"."admin_comment"        IS 'Hidden comment for administrative purposes';
 COMMENT ON COLUMN "member"."activated"            IS 'Timestamp of first activation of account (i.e. usage of "invite_code"); required to be set for "active" members';
 COMMENT ON COLUMN "member"."last_activity"        IS 'Date of last activity of member; required to be set for "active" members';
 COMMENT ON COLUMN "member"."last_login"           IS 'Timestamp of last login';
+COMMENT ON COLUMN "member"."certified"            IS 'Timestamp of certification of account';
+COMMENT ON COLUMN "member"."certifier_id"         IS 'Auditor member who certified this account';
 COMMENT ON COLUMN "member"."login"                IS 'Login name';
 COMMENT ON COLUMN "member"."password"             IS 'Password (preferably as crypto-hash, depending on the frontend or access layer)';
 COMMENT ON COLUMN "member"."locked"               IS 'Locked members can not log in.';
