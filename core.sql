@@ -129,6 +129,7 @@ CREATE TABLE "member" (
         "profession"            TEXT,
 	"elected"		BOOLEAN,
 	"auditor"		BOOLEAN,
+	"lqfb_access"		BOOLEAN,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -197,6 +198,7 @@ COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
 COMMENT ON COLUMN "member"."elected"              IS 'Member was selected by vote for an office';
 COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
+COMMENT ON COLUMN "member"."lqfb_access"          IS 'Member has access to lqfb. If FALSE member can still use admin and auditor functions';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
 COMMENT ON COLUMN "member"."nin"                  IS 'National Insurance Number';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
