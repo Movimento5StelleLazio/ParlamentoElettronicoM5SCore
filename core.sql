@@ -112,7 +112,8 @@ CREATE TABLE "member" (
         "password_reset_secret"        TEXT     UNIQUE,
         "password_reset_secret_expiry" TIMESTAMPTZ,
         "name"                  TEXT            UNIQUE,
-        "surname"               TEXT,
+        "firstname"             TEXT,
+        "lastname"              TEXT,
         "identification"        TEXT            UNIQUE,
         "authentication"        TEXT,
         "organizational_unit"   TEXT,
@@ -193,7 +194,8 @@ COMMENT ON COLUMN "member"."notify_email_secret_expiry" IS 'Expiry date/time for
 COMMENT ON COLUMN "member"."notify_email_lock_expiry"   IS 'Date/time until no further email confirmation mails may be sent (abuse protection)';
 COMMENT ON COLUMN "member"."notify_level"         IS 'Selects which event notifications are to be sent to the "notify_email" mail address, may be NULL if member did not make any selection yet';
 COMMENT ON COLUMN "member"."name"                 IS 'Distinct name of the member, may be NULL if account has not been activated yet';
-COMMENT ON COLUMN "member"."surname"              IS 'Real surname of the member, may be NULL if account has not been activated yet';
+COMMENT ON COLUMN "member"."firstname"            IS 'Real first of the member, may be NULL if account has not been activated yet';
+COMMENT ON COLUMN "member"."lastname"             IS 'Real last of the member, may be NULL if account has not been activated yet';
 COMMENT ON COLUMN "member"."identification"       IS 'Optional identification number or code of the member';
 COMMENT ON COLUMN "member"."authentication"       IS 'Information about how this member was authenticated';
 COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the organization the member belongs to';

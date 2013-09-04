@@ -1,6 +1,8 @@
 BEGIN;
-ALTER TABLE member ADD COLUMN surname TEXT;
-COMMENT ON COLUMN "member"."surname"              IS 'Real surname of the member, may be NULL if account has not been activated yet';
+ALTER TABLE member ADD COLUMN lastname TEXT;
+COMMENT ON COLUMN "member"."lastname"              IS 'Real last name of the member, may be NULL if account has not been activated yet';
+ALTER TABLE member ADD COLUMN firstname TEXT;
+COMMENT ON COLUMN "member"."firstname"              IS 'Real first name of the member, may be NULL if account has not been activated yet';
 ALTER TABLE member ADD COLUMN creator_id INT4;
 COMMENT ON COLUMN "member"."creator_id"           IS 'Auditor member who created this account';
 ALTER TABLE member ADD COLUMN certifier_id INT4;
