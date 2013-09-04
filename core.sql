@@ -134,6 +134,7 @@ CREATE TABLE "member" (
 	"elected"		BOOLEAN,
 	"auditor"		BOOLEAN,
 	"lqfb_access"		BOOLEAN,
+	"municipality_id"	INT4,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -213,6 +214,7 @@ COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the me
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
 COMMENT ON COLUMN "member"."statement"            IS 'Freely chosen text of the member for his/her profile';
+COMMENT ON COLUMN "member"."municipality_id"       IS 'ID of city of location of residence';
 
 
 -- DEPRECATED API TABLES --

@@ -1,13 +1,16 @@
 CREATE TABLE "member_data" (
-        "member_id"             INT4            NOT NULL UNIQUE,
+        "id"                    INT4            NOT NULL UNIQUE,
         "birthplace"            TEXT            NOT NULL,
         "birthdate"             DATE            NOT NULL,
-        "municipality_id"       INT4            NOT NULL,
         "idcard"                TEXT            NOT NULL UNIQUE,
         "email"                 TEXT,
         "residence_address"     TEXT            NOT NULL,
+        "residence_city"        TEXT            NOT NULL,
+        "residence_province"    TEXT            NOT NULL,
         "residence_postcode"    TEXT            NOT NULL,
         "domicile_address"      TEXT            NOT NULL,
+        "domicile_city"         TEXT            NOT NULL,
+        "domicile_province"     TEXT            NOT NULL,
         "domicile_postcode"     TEXT            NOT NULL,
         "token_serial"          TEXT );
         

@@ -1,4 +1,6 @@
 BEGIN;
+ALTER TABLE member ADD COLUMN municipality_id INT4;
+COMMENT ON COLUMN "member"."municipality_id"       IS 'ID of city of location of residence';
 ALTER TABLE member ADD COLUMN lastname TEXT;
 COMMENT ON COLUMN "member"."lastname"              IS 'Real last name of the member, may be NULL if account has not been activated yet';
 ALTER TABLE member ADD COLUMN firstname TEXT;
