@@ -21,8 +21,8 @@ CREATE TYPE "scan_type" AS ENUM
   ('id_front','id_rear','id_picture','nin','health_insurance');
 
 CREATE TABLE "idcard_scan" (
-        "member_id"             INT4            NOT NULL UNIQUE,
-        "type"                  scan_type       NOT NULL,
+        "member_id"             INT4            NOT NULL,
+        "scan_type"             scan_type       NOT NULL,
         "data"                  BYTEA           NOT NULL );
 
 COMMENT ON TABLE  "idcard_scan" IS 'HQ scans of member picture, id cards and/or other idenfication documents';
