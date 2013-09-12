@@ -3,7 +3,7 @@ CREATE TABLE "member_data" (
         "birthplace"            TEXT            NOT NULL,
         "birthdate"             DATE            NOT NULL,
         "idcard"                TEXT            NOT NULL UNIQUE,
-        "email"                 TEXT,
+        "email"                 TEXT            NOT NULL,
         "residence_address"     TEXT            NOT NULL,
         "residence_city"        TEXT            NOT NULL,
         "residence_province"    TEXT            NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE "member_data" (
         "domicile_city"         TEXT            NOT NULL,
         "domicile_province"     TEXT            NOT NULL,
         "domicile_postcode"     TEXT            NOT NULL,
-        "token_serial"          TEXT );
+        "token_serial"          TEXT            NOT NULL UNIQUE);
         
 COMMENT ON TABLE "member_data" IS 'Member sensitive data collection';
 
