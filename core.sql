@@ -134,7 +134,7 @@ CREATE TABLE "member" (
 	"elected"		BOOLEAN,
 	"auditor"		BOOLEAN,
 	"lqfb_access"		BOOLEAN,
-	"municipality_id"	INT4,
+	"unit_group_id"  	INT4,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -214,7 +214,7 @@ COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the me
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
 COMMENT ON COLUMN "member"."statement"            IS 'Freely chosen text of the member for his/her profile';
-COMMENT ON COLUMN "member"."municipality_id"       IS 'ID of city of location of residence';
+COMMENT ON COLUMN "member"."unit_group_id"        IS 'ID of city of location of residence';
 
 
 -- DEPRECATED API TABLES --
@@ -347,6 +347,18 @@ COMMENT ON TABLE "unit" IS 'Organizational units organized as trees; Delegations
 COMMENT ON COLUMN "unit"."parent_id"    IS 'Parent id of tree node; Multiple roots allowed';
 COMMENT ON COLUMN "unit"."active"       IS 'TRUE means new issues can be created in areas of this unit';
 COMMENT ON COLUMN "unit"."member_count" IS 'Count of members as determined by column "voting_right" in table "privilege"';
+
+CREATE TABLE "unit_group" (
+        "id"                    SERIAL4         PRIMARY KEY,
+        "name"                  TEXT            NOT NULL UNIQUE DEFAULT '');
+CREATE INDEX "unit_group_idx" ON "unit_group" ("id");
+
+COMMENT ON TABLE "unit_group" IS 'Group of units (name)';
+
+CREATE TABLE "unit_group_member" (
+        PRIMARY KEY ("unit_group_id","unit_id"),
+        "unit_group_id"         INT4            REFERENCES "unit_group" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "unit_id"               INT4            REFERENCES "unit" ("id") ON DELETE CASCADE ON UPDATE CASCADE);
 
 CREATE TABLE "member_login" (
         PRIMARY KEY ("member_id", "login_time"),
