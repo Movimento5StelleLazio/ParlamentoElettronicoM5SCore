@@ -65,7 +65,6 @@ COMMENT ON INDEX "system_setting_singleton_idx" IS 'This index ensures that "sys
 COMMENT ON COLUMN "system_setting"."member_ttl" IS 'Time after members get their "active" flag set to FALSE, if they do not show any activity.';
 COMMENT ON COLUMN "system_setting"."gui_preset" IS 'Choose from configured gui from the array config.gui_preset';
 
-
 CREATE TABLE "contingent" (
         PRIMARY KEY ("polling", "time_frame"),
         "polling"               BOOLEAN,
@@ -89,12 +88,15 @@ COMMENT ON TYPE "notify_level" IS 'Level of notification: ''none'' = no notifica
 CREATE TABLE "member" (
         "id"                    SERIAL4         PRIMARY KEY,
         "created"               TIMESTAMPTZ     NOT NULL DEFAULT now(),
+        "creator_id"            INT4,
         "invite_code"           TEXT            UNIQUE,
         "invite_code_expiry"    TIMESTAMPTZ,
         "admin_comment"         TEXT,
         "activated"             TIMESTAMPTZ,
         "last_activity"         DATE,
         "last_login"            TIMESTAMPTZ,
+        "certified"             TIMESTAMPTZ,
+        "certifier_id"          INT4,
         "login"                 TEXT            UNIQUE,
         "password"              TEXT,
         "locked"                BOOLEAN         NOT NULL DEFAULT FALSE,
@@ -110,6 +112,8 @@ CREATE TABLE "member" (
         "password_reset_secret"        TEXT     UNIQUE,
         "password_reset_secret_expiry" TIMESTAMPTZ,
         "name"                  TEXT            UNIQUE,
+        "firstname"             TEXT,
+        "lastname"              TEXT,
         "identification"        TEXT            UNIQUE,
         "authentication"        TEXT,
         "organizational_unit"   TEXT,
@@ -118,17 +122,19 @@ CREATE TABLE "member" (
         "birthday"              DATE,
         "address"               TEXT,
         "email"                 TEXT,
-        "codice_fiscale"	character varying(16) UNIQUE,
+        "nin"                   TEXT UNIQUE,
         "xmpp_address"          TEXT,
         "website"               TEXT,
         "phone"                 TEXT,
-        "m5sid"                 INTEGER,
         "rsa_public_key"        BYTEA,
         "certification_level"   INTEGER NOT NULL DEFAULT 0,
         "token_serial"          TEXT,
         "mobile_phone"          TEXT,
         "profession"            TEXT,
 	"elected"		BOOLEAN,
+	"auditor"		BOOLEAN,
+	"lqfb_access"		BOOLEAN,
+	"unit_group_id"  	INT4,
         "external_memberships"  TEXT,
         "external_posts"        TEXT,
         "formatting_engine"     TEXT,
@@ -147,32 +153,35 @@ CREATE TRIGGER "update_text_search_data"
     "name", "identification", "organizational_unit", "internal_posts",
     "realname", "external_memberships", "external_posts", "statement" );
 
-CREATE FUNCTION codice_fiscale_insert_trigger()
+CREATE FUNCTION nin_insert_trigger()
   RETURNS TRIGGER 
   LANGUAGE plpgsql VOLATILE AS $$
     DECLARE myrec int;
     BEGIN
-       IF length (NEW.codice_fiscale) = 16 OR NEW.codice_fiscale ISNULL THEN
+       IF length (NEW.nin) = 16 OR NEW.nin ISNULL THEN
 		RETURN NEW;
 	ELSE
-		RAISE EXCEPTION 'Lunghezza non permessa';
+		RAISE EXCEPTION 'Wrong lenght';
       END IF;
       RETURN NULL;
    END;
   $$;
-CREATE TRIGGER codice_fiscale_validation
+CREATE TRIGGER nin_validation
   BEFORE INSERT OR UPDATE ON "member"
-  FOR EACH ROW EXECUTE PROCEDURE codice_fiscale_insert_trigger();
+  FOR EACH ROW EXECUTE PROCEDURE nin_insert_trigger();
 
 COMMENT ON TABLE "member" IS 'Users of the system, e.g. members of an organization';
 
 COMMENT ON COLUMN "member"."created"              IS 'Creation of member record and/or invite code';
+COMMENT ON COLUMN "member"."creator_id"           IS 'Auditor member who created this account';
 COMMENT ON COLUMN "member"."invite_code"          IS 'Optional invite code, to allow a member to initialize his/her account the first time';
 COMMENT ON COLUMN "member"."invite_code_expiry"   IS 'Expiry data/time for "invite_code"';
 COMMENT ON COLUMN "member"."admin_comment"        IS 'Hidden comment for administrative purposes';
 COMMENT ON COLUMN "member"."activated"            IS 'Timestamp of first activation of account (i.e. usage of "invite_code"); required to be set for "active" members';
 COMMENT ON COLUMN "member"."last_activity"        IS 'Date of last activity of member; required to be set for "active" members';
 COMMENT ON COLUMN "member"."last_login"           IS 'Timestamp of last login';
+COMMENT ON COLUMN "member"."certified"            IS 'Timestamp of certification of account';
+COMMENT ON COLUMN "member"."certifier_id"         IS 'Auditor member who certified this account';
 COMMENT ON COLUMN "member"."login"                IS 'Login name';
 COMMENT ON COLUMN "member"."password"             IS 'Password (preferably as crypto-hash, depending on the frontend or access layer)';
 COMMENT ON COLUMN "member"."locked"               IS 'Locked members can not log in.';
@@ -186,22 +195,26 @@ COMMENT ON COLUMN "member"."notify_email_secret_expiry" IS 'Expiry date/time for
 COMMENT ON COLUMN "member"."notify_email_lock_expiry"   IS 'Date/time until no further email confirmation mails may be sent (abuse protection)';
 COMMENT ON COLUMN "member"."notify_level"         IS 'Selects which event notifications are to be sent to the "notify_email" mail address, may be NULL if member did not make any selection yet';
 COMMENT ON COLUMN "member"."name"                 IS 'Distinct name of the member, may be NULL if account has not been activated yet';
+COMMENT ON COLUMN "member"."firstname"            IS 'Real first of the member, may be NULL if account has not been activated yet';
+COMMENT ON COLUMN "member"."lastname"             IS 'Real last of the member, may be NULL if account has not been activated yet';
 COMMENT ON COLUMN "member"."identification"       IS 'Optional identification number or code of the member';
 COMMENT ON COLUMN "member"."authentication"       IS 'Information about how this member was authenticated';
 COMMENT ON COLUMN "member"."organizational_unit"  IS 'Branch or division of the organization the member belongs to';
 COMMENT ON COLUMN "member"."internal_posts"       IS 'Posts (offices) of the member inside the organization';
-COMMENT ON COLUMN "member"."m5sid"		  IS 'M5S identification number';
 COMMENT ON COLUMN "member"."rsa_public_key"       IS 'RSA Public Key for member';
 COMMENT ON COLUMN "member"."certification_level"  IS '0 = non certificato, 1 = certificato, 2 = pec, 3 = token';
 COMMENT ON COLUMN "member"."token_serial"         IS 'Token serial';
 COMMENT ON COLUMN "member"."realname"             IS 'Real name of the member, may be identical with "name"';
 COMMENT ON COLUMN "member"."elected"              IS 'Member was selected by vote for an office';
+COMMENT ON COLUMN "member"."auditor"              IS 'Member is an auditor who can create, modify or certify other members';
+COMMENT ON COLUMN "member"."lqfb_access"          IS 'Member has access to lqfb. If FALSE member can still use admin and auditor functions';
 COMMENT ON COLUMN "member"."email"                IS 'Published email address of the member; not used for system notifications';
-COMMENT ON COLUMN "member"."codice_fiscale"       IS 'Italian tax identification number (Codice fiscale)';
+COMMENT ON COLUMN "member"."nin"                  IS 'National Insurance Number';
 COMMENT ON COLUMN "member"."external_memberships" IS 'Other organizations the member is involved in';
 COMMENT ON COLUMN "member"."external_posts"       IS 'Posts (offices) outside the organization';
 COMMENT ON COLUMN "member"."formatting_engine"    IS 'Allows different formatting engines (i.e. wiki formats) to be used for "member"."statement"';
 COMMENT ON COLUMN "member"."statement"            IS 'Freely chosen text of the member for his/her profile';
+COMMENT ON COLUMN "member"."unit_group_id"        IS 'ID of city of location of residence';
 
 
 -- DEPRECATED API TABLES --
@@ -334,6 +347,18 @@ COMMENT ON TABLE "unit" IS 'Organizational units organized as trees; Delegations
 COMMENT ON COLUMN "unit"."parent_id"    IS 'Parent id of tree node; Multiple roots allowed';
 COMMENT ON COLUMN "unit"."active"       IS 'TRUE means new issues can be created in areas of this unit';
 COMMENT ON COLUMN "unit"."member_count" IS 'Count of members as determined by column "voting_right" in table "privilege"';
+
+CREATE TABLE "unit_group" (
+        "id"                    SERIAL4         PRIMARY KEY,
+        "name"                  TEXT            NOT NULL UNIQUE DEFAULT '');
+CREATE INDEX "unit_group_idx" ON "unit_group" ("id");
+
+COMMENT ON TABLE "unit_group" IS 'Group of units (name)';
+
+CREATE TABLE "unit_group_member" (
+        PRIMARY KEY ("unit_group_id","unit_id"),
+        "unit_group_id"         INT4            REFERENCES "unit_group" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+        "unit_id"               INT4            REFERENCES "unit" ("id") ON DELETE CASCADE ON UPDATE CASCADE);
 
 CREATE TABLE "member_login" (
         PRIMARY KEY ("member_id", "login_time"),
@@ -1273,6 +1298,20 @@ CREATE TABLE checked_event (
         CONSTRAINT "checked_event_member_id_fkey" FOREIGN KEY ("member_id") REFERENCES "member" ("id") MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE);
 
 COMMENT ON TABLE "checked_event" IS 'Possibility to filter events';
+
+CREATE TABLE keyword (
+        "id"                     SERIAL4      PRIMARY KEY,
+        "name"                   TEXT         NOT NULL UNIQUE);
+COMMENT ON TABLE "keyword" IS 'Possibility to filter issues';
+
+CREATE TABLE issue_keyword (
+        "issue_id"               INT4         NOT NULL,
+        "keyword_id"             INT4         NOT NULL,
+        CONSTRAINT "issue_keyword_pkey" PRIMARY KEY ("issue_id", "keyword_id"),
+        CONSTRAINT "issue_keyword_issue_id_fkey" FOREIGN KEY ("issue_id") REFERENCES "issue" ("id") MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE,
+        CONSTRAINT "issue_keyword_keyword_id_fkey" FOREIGN KEY ("keyword_id") REFERENCES "keyword" ("id") MATCH SIMPLE ON UPDATE CASCADE ON DELETE CASCADE);
+
+COMMENT ON TABLE "issue_keyword" IS 'Keywords to issues association';
 
 
 
